@@ -1,10 +1,10 @@
 ;(function (root, factory) {
-    if (typeof define === 'function') {
-        define(['city.select'], factory);
-    } else if (typeof exports === 'object') {
-        module.exports = factory();
+    if (typeof define === 'function' && define.amd) {
+        define([ 'jquery' ], factory);
+    } else if (typeof exports === 'object') { // Node/CommonJS
+        module.exports = factory(require('jquery'));
     } else {
-        factory();
+        factory(jQuery);
     }
 }(this, function () {
     'use strict';
@@ -42,32 +42,14 @@ cityselect = function ($) {
       }, params);
       var target = $(this);
       var hasSelected = ' selected="selected"';
-      function singleBox(target, params) {
-        var all = target;
-        var data = params.data;
-        var html = [];
-        for (var oo in data) {
-          if (data.hasOwnProperty(oo)) {
-            html.push('<option ' + params.metaTag + '="' + data[oo][params.id] + '"' + (params.selected && params.selected == data[oo][params.id] ? hasSelected : '') + '>' + data[oo][params.name] + '</option>');
-            for (var xx in data[oo][params.children]) {
-              if (data[oo][params.children].hasOwnProperty(xx)) {
-                if (params.idVal) {
-                  html.push('<option ' + params.metaTag + '="' + data[oo][params.children][xx][params.id] + '" value="' + data[oo][params.children][xx][params.name] + '"' + (params.selected && params.selected == data[oo][params.children][xx][params.id] ? hasSelected : '') + '>' + data[oo][params.children][xx][params.name] + '</option>');
-                } else {
-                  html.push('<option ' + params.metaTag + '="' + data[oo][params.children][xx][params.id] + '" value="' + data[oo][params.children][xx][params.id] + '"' + (params.selected && params.selected == data[oo][params.children][xx][params.id] ? hasSelected : '') + '>' + data[oo][params.children][xx][params.name] + '</option>');
-                }
-              }
-            }
-          }
-        }
-        html = html.join('');
-        all.find('option').remove();
-        all.append(html);
-      }
       function multipleBox(target, params) {
         var province = target.eq(0);
         var city = target.eq(1);
+        var county = target.eq(2);
+        var curProvince = 0;
+        var curCity = 0;
         var html = [], oItem;
+        html.push('<option value=""> -- 请选择 -- </option>');
         for (var item in params.data) {
           if (params.data.hasOwnProperty(item)) {
             oItem = params.data[item];
@@ -89,7 +71,9 @@ cityselect = function ($) {
               /*jshint immed: true */
               return function (v) {
                 var extra = $(v).attr(params.metaTag);
+                curProvince = extra;
                 var html = [], oItem;
+                html.push('<option value=""> -- 请选择 -- </option>');
                 for (var item in params.data) {
                   if (params.data.hasOwnProperty(item)) {
                     oItem = params.data[item];
@@ -111,16 +95,57 @@ cityselect = function ($) {
                 html = html.join('');
                 city.find('option').remove();
                 city.append(html);
+                city.on('change', function () {
+                  var curSelect = $(this).val();
+                  var cities = city.find('option');
+                  cities.each(function (k, v) {
+                    if ($(v).val() == curSelect) {
+                      /*jshint immed: true */
+                      return function (v) {
+                        var extra = $(v).attr(params.metaTag);
+                        curCity = extra;
+                        var html = [], oItem;
+                        html.push('<option value=""> -- 请选择 -- </option>');
+                        for (var item in params.data) {
+                          if (params.data.hasOwnProperty(item)) {
+                            oItem = params.data[item];
+                            if (oItem[params.id] == curProvince && oItem[params.children]) {
+                              oItem = oItem[params.children];
+                              for (var sItem in oItem) {
+                                if (oItem.hasOwnProperty(sItem)) {
+                                  if (oItem[sItem][params.id] == curCity && oItem[sItem][params.children]) {
+                                    sItem = oItem[sItem][params.children];
+                                    for (var rItem in sItem) {
+                                      if (sItem.hasOwnProperty(rItem)) {
+                                        if (params.idVal) {
+                                          html.push('<option ' + params.metaTag + '="' + sItem[rItem][params.id] + '" value="' + sItem[rItem][params.id] + '"' + (params.selected && params.selected[2] == sItem[rItem][params.id] ? hasSelected : '') + '>' + sItem[rItem][params.name] + '</option>');
+                                        } else {
+                                          html.push('<option ' + params.metaTag + '="' + sItem[rItem][params.id] + '" value="' + sItem[rItem][params.name] + '"' + (params.selected && params.selected[2] == sItem[rItem][params.id] ? hasSelected : '') + '>' + sItem[rItem][params.name] + '</option>');
+                                        }
+                                      }
+                                    }
+                                    break;
+                                  }
+                                }
+                              }
+                              break;
+                            }
+                          }
+                        }
+                        html = html.join('');
+                        county.find('option').remove();
+                        county.append(html);
+                      }(v);
+                    }
+                  });
+                }).trigger('change');
               }(v);
             }
           });
         }).trigger('change');
       }
       switch (target.length) {
-      case 1:
-        singleBox(target, params);
-        break;
-      case 2:
+      case 3:
         multipleBox(target, params);
         break;
       default:
