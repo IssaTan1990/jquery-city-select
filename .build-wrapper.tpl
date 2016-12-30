@@ -1,10 +1,10 @@
 ;(function (root, factory) {
-    if (typeof define === 'function') {
-        define(['city.select'], factory);
-    } else if (typeof exports === 'object') {
-        module.exports = factory();
+    if (typeof define === 'function' && define.amd) {
+        define([ 'jquery' ], factory);
+    } else if (typeof exports === 'object') { // Node/CommonJS
+        module.exports = factory(require('jquery'));
     } else {
-        factory();
+        factory(jQuery);
     }
 }(this, function () {
     'use strict';
