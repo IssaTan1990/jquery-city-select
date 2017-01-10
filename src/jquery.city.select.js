@@ -103,26 +103,37 @@ define('city.select', [ 'jQuery' ], function ($) {
                         for (var item in params.data) {
                           if (params.data.hasOwnProperty(item)) {
                             oItem = params.data[ item ];
+                            if (oItem[ params.id ] == curProvince) {
+                              if (oItem[ params.children ]) {
+                                province.trigger('hasCity');
+                                oItem = oItem[ params.children ];
+                                for (var sItem in oItem) {
+                                  if (oItem.hasOwnProperty(sItem)) {
+                                    if (oItem[ sItem ][ params.id ] == curCity) {
+                                      if (oItem[ sItem ][ params.children ]) {
+                                        city.trigger('hasCounty');
+                                        sItem = oItem[ sItem ][ params.children ];
+                                        for (var rItem in sItem) {
+                                          if (sItem.hasOwnProperty(rItem)) {
+                                            if (params.idVal) {
+                                              html.push('<option ' + params.metaTag + '="' + sItem[ rItem ][ params.id ] + '" value="' + sItem[ rItem ][ params.id ] + '"' + ((params.selected && (params.selected[ 2 ] == sItem[ rItem ][ params.id ])) ? hasSelected : '') + '>' + sItem[ rItem ][ params.name ] + '</option>');
 
-                            if (oItem[ params.id ] == curProvince && oItem[ params.children ]) {
-                              oItem = oItem[ params.children ];
-                              for (var sItem in oItem) {
-                                if (oItem.hasOwnProperty(sItem)) {
-                                  if (oItem[ sItem ][ params.id ] == curCity && oItem[ sItem ][ params.children ]) {
-                                    sItem = oItem[ sItem ][ params.children ];
-                                    for (var rItem in sItem) {
-                                      if (sItem.hasOwnProperty(rItem)) {
-                                        if (params.idVal) {
-                                          html.push('<option ' + params.metaTag + '="' + sItem[ rItem ][ params.id ] + '" value="' + sItem[ rItem ][ params.id ] + '"' + ((params.selected && (params.selected[ 2 ] == sItem[ rItem ][ params.id ])) ? hasSelected : '') + '>' + sItem[ rItem ][ params.name ] + '</option>');
-
-                                        } else {
-                                          html.push('<option ' + params.metaTag + '="' + sItem[ rItem ][ params.id ] + '" value="' + sItem[ rItem ][ params.name ] + '"' + ((params.selected && (params.selected[ 2 ] == sItem[ rItem ][ params.id ])) ? hasSelected : '') + '>' + sItem[ rItem ][ params.name ] + '</option>');
+                                            } else {
+                                              html.push('<option ' + params.metaTag + '="' + sItem[ rItem ][ params.id ] + '" value="' + sItem[ rItem ][ params.name ] + '"' + ((params.selected && (params.selected[ 2 ] == sItem[ rItem ][ params.id ])) ? hasSelected : '') + '>' + sItem[ rItem ][ params.name ] + '</option>');
+                                            }
+                                          }
                                         }
+                                      } else {
+                                        county.hide();
+                                        city.trigger('emptyCounty');
                                       }
+                                      break;
                                     }
-                                    break;
                                   }
                                 }
+                              } else {
+                                city.hide();
+                                province.trigger('emptyCity');
                               }
                               break;
                             }
@@ -134,13 +145,13 @@ define('city.select', [ 'jQuery' ], function ($) {
                       }(v));
                     }
                   });
-                }).trigger('change');
-                
+                }).trigger('change', city.val());
+
               }(v));
             }
           });
 
-        }).trigger('change');
+        }).trigger('change', province.val());
 
       }
 
